@@ -105,9 +105,15 @@ class ExpiringLocalCache(AbstractCache):
         根据过期时间清理缓存
         :return:
         """
-        for key, (value, expire_time) in self._cache_container.items():
-            if expire_time < time.time():
-                del self._cache_container[key]
+        # dict在迭代的同时修改会抛出RuntimeError: dictionary changed size during iteration
+        # 因此先收集所有需要删除的key，最后再统一删除
+        expired_keys = [
+            key
+            for key, (_, expire_time) in self._cache_container.items()
+            if expire_time < time.time()
+        ]
+        for key in expired_keys:
+            del self._cache_container[key]
 
     async def _start_clear_cron(self):
         """
