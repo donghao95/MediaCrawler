@@ -42,6 +42,16 @@ class TestExpiringLocalCache(unittest.TestCase):
         time.sleep(12)
         self.assertIsNone(self.cache.get('key'))
 
+    def test_clear_method_removes_expired_keys(self):
+        """确保_clear方法在删除过期键时不会触发迭代错误"""
+        self.cache.set("key1", "value1", 1)
+        self.cache.set("key2", "value2", 10)
+        time.sleep(2)
+        # 直接调用内部清理方法，之前的实现会在迭代删除时抛出异常
+        self.cache._clear()
+        self.assertIsNone(self.cache.get("key1"))
+        self.assertEqual(self.cache.get("key2"), "value2")
+
     def tearDown(self):
         del self.cache
 
